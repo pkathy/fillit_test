@@ -6,7 +6,7 @@
 #    By: swynona <swynona@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/09/04 19:36:16 by swynona           #+#    #+#              #
-#    Updated: 2019/10/26 16:53:46 by pkathy           ###   ########.fr        #
+#    Updated: 2019/09/13 20:56:18 by swynona          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,13 +44,12 @@ INCLUDES=./
 
 all: $(NAME)
 
-$(NAME): $(SRCS) libft.h
-	@gcc -Wall -Wextra -Werror -I$(INCLUDES) -c $(SRCS)
+$(NAME): $(SRCS) $(OBJECTS) libft.h
 	@ar rc $(NAME) $(OBJECTS)
 	@ranlib $(NAME)
 
 $(OBJECTS): %.o : %.c
-	@gcc -Wall -Wextra -Werror -I$(INCLUDES) -c $<
+	@gcc -Wall -Werror -Wextra -I$(INCLUDES) -c $<
 
 clean:
 	@/bin/rm -f $(OBJECTS)
