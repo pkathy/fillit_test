@@ -31,4 +31,5 @@ void	init_4(char ***a, int b);
 void	init_5(char ***a, int b);
 char	**final_init(void);
 char	get_template_type(char *template, char **dict);
+int 	*get_template_arr(const char *path);
 #endif
