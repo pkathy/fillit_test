@@ -12,6 +12,7 @@
 
 #ifndef FILLIT_H
 # define FILLIT_H
+# define SIZE 113
 # include "../libft/libft.h"
 
 int		reader(int fd, void ***tetromino);
@@ -29,4 +30,5 @@ void	init_3(char ***a, int b);
 void	init_4(char ***a, int b);
 void	init_5(char ***a, int b);
 char	**final_init(void);
+char	get_template_type(char *template, char **dict);
 #endif

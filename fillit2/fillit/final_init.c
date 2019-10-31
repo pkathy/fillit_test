@@ -12,7 +12,6 @@
 
 #include "fillit.h"
 #define		SIZE 113
-char	get_template_type(char *template, char **dict);
 
 char	**clear(char ***a)
 {
@@ -33,7 +32,7 @@ char	**final_init(void)
 		return (NULL);
 	i = -1;
 	while (++i < SIZE)
-		if (!(templates[i] = ft_strnew(19)))
+		if (!(templates[i] = ft_strnew(21)))
 			return (clear(&templates));
 	init_1(&templates, 0);
 	init_2(&templates, 25);
@@ -43,99 +42,52 @@ char	**final_init(void)
 	return (templates);
 }
 
-//nado sdelat'
-// >=66
-char	line_join(char **line, char **to_join, int i)
+int 	scan_template(int fd, char **dict, int *trigger)
 {
-	char *tmp;
+	char buf[22];
+	int ret;
 
-	tmp = *to_join;
-	if (!(*to_join = ft_strjoin(*to_join, *line)))
-	{
-		ft_strdel(to_join);
-		ft_strdel(line);
+	buf[21] = 0;
+	if ((ret = read(fd, buf, 21)) < 0)
 		return (0);
-	}
-	ft_strdel(&tmp);
-	tmp = *to_join;
-	if (!(*to_join = ft_strjoin(*to_join, i % 4 == 0 ? "\0" : "\n")))
-	{
-		ft_strdel(to_join);
-		ft_strdel(line);
-		return (0);
-	}
-	ft_strdel(&tmp);
-	ft_strdel(line);
-	return (1);
+	if (ret < 20)
+		return (ret == 0 ? 0 : -1);
+	else if (ret == 20 && buf[20] == 0 || buf[19] == '\n')
+		buf[20] = '\n';
+	if (ret == 21)
+		*trigger = 1;
+	else
+		*trigger = 0;
+	return (get_template_type(buf, dict));
 }
 
-char	*scan_template(int fd)
+
+int 	*scan(char **dict)
 {
-	int		i;
-	char 	ret;
-	char	*str;
-	char	*tmp;
-	char 	*final_str;
+	int *result;
+	int ret;
+	int i;
+	int fd;
+	int trigger;
 
-	if (!(final_str = ft_strnew(0)))
+	if ((fd = open("test", O_RDONLY)) < 0)
 		return (NULL);
-	i  = 0;
-	while ((ret = get_next_line(fd, &str)) > 0 && ++i < 5) {
-		printf("%d\n", i);
-		if (!line_join(&str, &final_str, i))
-			return (NULL);
-	}
-	printf("%d\n", i);
-	if (ret == -1)
-	{
-		ft_strdel(&final_str);
-		return (NULL);
-	}
-	return(final_str);
-}
-
-//доделать
-int		*scan(char **dict)
-{
-	char	*ret;
-	int 	i;
-	int 	fd;
-	int		*res;
-	int 	ret1;
-
-	res = ft_memalloc(sizeof(int) * 26);
-	fd = open("test", O_RDONLY);
 	i = -1;
-	while((ret = scan_template(fd)) > 0 && ret[0] !=0 && ++i >= 0)
+	if (!(result = ft_memalloc(27)))
 	{
-//		printf(">>>>>>\n%s\n<<<<<<<\n%d\n", ret,i);
-//		printf("%d\n", get_template_type(ret,dict));
-
-		/*if ((res[i] = get_template_type(ret, dict)) < 0)
-		{
-			return (NULL);
-		}*/
-		//get_next_line(fd, &ret);
-		/*if ((res[i] = get_template_type(ret, dict)) < 0)
-		{
-			res[i] = -1;
-			ft_strdel(&ret);
-			return (res);
-		}
-		if (!(ret1 = get_next_line(fd, &ret)))
-		{
-			res[i] = 0;
-			ft_strdel(&ret);
-			return (res);
-		}*/
-		//if (ret1 < 0)
-			//error, will handle later
-		//	return (NULL);
+		close(fd);
+		return (NULL);
 	}
+	while ((ret = scan_template(fd, dict, &trigger)) > 0 && ++i >= 0 && i < 26)
+		result[i] = ret;
 	close(fd);
-	return (ret);
+	if (ret != 0 || (trigger && result[i] > 0))
+	{
+		ft_memdel((void **)(&result));
+		return (NULL);
+	}
+	return (result);
 }
-
 int main()
 {
 	char **dict = final_init();
@@ -143,78 +95,56 @@ int main()
 	char	*str;
 	char 	*final_str;
 
-	/*int fd = open("test", O_RDONLY);
-	if (!(final_str = ft_strnew(0)))
-		return (NULL);
-	get_next_line(fd, &str);
-	line_join(&str, &final_str, 3);
-	get_next_line(fd, &str);
-	line_join(&str, &final_str, 2);
-	get_next_line(fd, &str);
-	line_join(&str, &final_str, 3);
-	get_next_line(fd, &str);
-	line_join(&str, &final_str, 4);
-	printf(">>>>>>\n%s\n", final_str);*/
-
 	int *ret = scan(dict);
-	//printf("%d\n", ret[0]);
-	//for(int i = 0;  i < SIZE; ++i)
-	//	printf("%s\n\n", dict[i]);
+	if (!ret)
+	{
+		printf("error\n");
+		return (-1);
+	}
+	for (int i = 0; i < 27; ++i)
+	{
+		printf("ret[%d]: %d\n", i, ret[i]);
+	}
 
+}
+
+char	get_template_type_2(unsigned char i)
+{
+	if ((i >= 59 && i <= 65) || (i >= 66 && i <= 71))
+		return ((i >= 59 && i <= 65) ? 11 : 12);
+	else if ((i >= 72 && i <= 77) || (i >= 78 && i <= 83))
+		return ((i >= 72 && i <= 77) ? 13 : 14);
+	else if ((i >= 84 && i <= 89) || (i >= 90 && i <= 95))
+		return ((i >= 84 && i <= 89) ? 15 : 16);
+	else if ((i >= 96 && i <= 101) || (i >= 102 && i <= 107))
+		return ((i >= 96 && i <= 101) ? 17 : 18);
+	else if (i >= 108 && i <= 113)
+		return ((i >= 108 && i <= 113) ? 19 : -1);
+	return (-1);
 }
 
 char	get_template_type(char *template, char **dict)
 {
 	unsigned char i;
 
-	i = 0;
-	while(i < SIZE)
-	{
+	i = -1;
+	while(++i < SIZE)
 		if (!ft_strcmp(template, dict[i]))
 			break;
-		if (i == SIZE - 1)
+		else if (i == SIZE - 1)
 			i+=10;
-		i++;
-	}
 	if (i == SIZE + 11)
 		return (-1);
-	if (i >= 0 && i <= 8)
-		return (1);
-	else if (i >= 9 && i <= 12)
-		return (2);
-	else if (i >= 13 && i <= 16)
-		return (3);
-	else if (i >= 17 && i <= 22)
-		return (4);
-	else if (i >= 23 && i <= 28)
-		return (5);
-	else if (i >= 29 && i <= 34)
-		return (6);
-	else if (i >= 35 && i <= 40)
-		return (7);
-	else if (i >= 41 && i <= 46)
-		return (8);
-	else if (i >= 47 && i <= 52)
-		return (9);
-	else if (i >= 53 && i <= 58)
-		return (10);
-	else if (i >= 59 && i <= 65)
-		return (11);
-	else if (i >= 66 && i <= 71)
-		return (12);
-	else if (i >= 72 && i <= 77)
-		return (13);
-	else if (i >= 78 && i <= 83)
-		return (14);
-	else if (i >= 84 && i <= 89)
-		return (15);
-	else if (i >= 90 && i <= 95)
-		return (16);
-	else if (i >= 96 && i <= 101)
-		return (17);
-	else if (i >= 102 && i <= 107)
-		return (18);
-	else if (i >= 108 && i <= 113)
-		return (19);
-	return (-1);
+	if ((i >= 0 && i <= 8) || (i >= 9 && i <= 12))
+		return ((i >= 0 && i <= 8) ? 1 : 2);
+	else if ((i >= 13 && i <= 16) || (i >= 17 && i <= 22))
+		return ((i >= 13 && i <= 16) ? 3 : 4);
+	else if ((i >= 23 && i <= 28) || (i >= 29 && i <= 34))
+		return ((i >= 23 && i <= 28) ? 5 : 6);
+	else if ((i >= 35 && i <= 40) || (i >= 41 && i <= 46))
+		return ((i >= 35 && i <= 40) ? 7 : 8);
+	else if ((i >= 47 && i <= 52) || (i >= 53 && i <= 58))
+		return ((i >= 47 && i <= 52) ? 9 : 10);
+	else if ((i >= 59 && i <= 65) || (i >= 66 && i <= 71))
+		return (get_template_type_2(i));
 }
